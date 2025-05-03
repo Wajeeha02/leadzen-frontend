@@ -3,11 +3,12 @@
 import axios from "axios";
 import React, { useState } from "react";
 import bgImage from "../assets/images/image.png";
+import { db, collection, addDoc } from "../firebase";  // Import Firebase functions
 
 const SentimentAnalysis = () => {
   const [customerMessage, setCustomerMessage] = useState("");
-  const [businessType, setBusinessType] = useState("e-commerce"); // New state for business type
-  const [analysisResult, setAnalysisResult] = useState<any>(null); // Updated type
+  const [businessType, setBusinessType] = useState("e-commerce");
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,12 +20,24 @@ const SentimentAnalysis = () => {
       const response = await axios.post(
         "http://127.0.0.1:5000/analyze-sentiment",
         {
-          message: customerMessage,  // Adjusted key
-          business_type: businessType,  // Added business_type
+          message: customerMessage,
+          business_type: businessType,
         }
       );
 
-      setAnalysisResult(response.data); // Assuming response contains 'sentiment' and 'suggested_response'
+      // Store analysis result in Firebase Firestore
+      const analysisData = {
+        message: customerMessage,
+        business_type: businessType,
+        sentiment: response.data.sentiment,
+        suggested_response: response.data.suggested_response,
+        timestamp: new Date(),
+      };
+
+      // Add data to Firestore collection "sentiment_analysis"
+      await addDoc(collection(db, "sentiment_analysis"), analysisData);
+
+      setAnalysisResult(response.data);
     } catch (error) {
       console.error("Error analyzing sentiment:", error);
     } finally {
@@ -80,8 +93,8 @@ const SentimentAnalysis = () => {
         {analysisResult && (
           <div className="md:w-1/2 w-full bg-white p-6 rounded-lg shadow-md text-bluedark border border-gray-300">
             <h3 className="text-xl font-bold mb-4">Analysis Result</h3>
-            <p><strong>Customer Sentiment:</strong> {analysisResult.sentiment}</p> {/* Adjusted field name */}
-            <p><strong>Suggested Response:</strong> {analysisResult.suggested_response}</p> {/* Adjusted field name */}
+            <p><strong>Customer Sentiment:</strong> {analysisResult.sentiment}</p>
+            <p><strong>Suggested Response:</strong> {analysisResult.suggested_response}</p>
           </div>
         )}
       </div>

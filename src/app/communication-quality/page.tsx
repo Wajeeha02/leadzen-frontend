@@ -3,6 +3,7 @@
 import axios from "axios";
 import React, { useState } from "react";
 import bgImage from "../assets/images/image.png";
+import { db, collection, addDoc } from "../firebase";  // Import Firestore functions
 
 const CommunicationQuality = () => {
   const [businessType, setBusinessType] = useState("e-commerce");
@@ -32,7 +33,22 @@ const CommunicationQuality = () => {
       );
 
       // Set the feedback evaluation response
-      setQualityResult(response.data.evaluation);  // Assuming response contains evaluation feedback
+      const evaluation = response.data.evaluation;  // Assuming response contains evaluation feedback
+      setQualityResult(evaluation);
+
+      // Store the result in Firebase Firestore
+      const communicationData = {
+        customerId,
+        customerMessage,
+        businessResponse,
+        businessType,
+        qualityResult: evaluation,
+        timestamp: new Date(),  // Timestamp when the evaluation was done
+      };
+
+      // Adding the analysis result to Firestore collection
+      await addDoc(collection(db, "communicationQuality"), communicationData);
+
     } catch (error) {
       console.error("Error analyzing communication quality:", error);
     } finally {
@@ -42,31 +58,18 @@ const CommunicationQuality = () => {
 
   return (
     <div
-      className="relative max-w-full h-screen bg-cover bg-no-repeat bg-bluedark flex items-center justify-center"
-      style={{ backgroundImage: `url(${bgImage.src})` }}
+      className=" bg-bluedark flex items-center justify-center min-h-screen" 
     >
       <div className="flex w-3/4 gap-10">
         {/* Left Side - Form */}
-        <div className="bg-opacity-75 bg-bluedark p-10 rounded-lg shadow-lg w-1/2">
-          <h1 className="text-3xl font-bold mb-6 text-center text-white">
+        <div className="bg-opacity-75 bg-white p-10 rounded-lg shadow-lg w-1/2">
+          <h1 className="text-3xl font-bold mb-6 text-center text-bluedark ">
             Communication Quality Analysis
           </h1>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-md font-medium mb-2 text-white">
-                Customer ID:
-              </label>
-              <input
-                type="text"
-                value={customerId}
-                onChange={(e) => setCustomerId(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg bg-lightblue text-bluedark focus:outline-none focus:ring-2 focus:ring-lightblue"
-                required
-              />
-            </div>
 
             <div>
-              <label className="block text-md font-medium mb-2 text-white">
+              <label className="block text-md font-medium mb-2 text-bluedark">
                 Customer Message:
               </label>
               <textarea
@@ -78,7 +81,7 @@ const CommunicationQuality = () => {
               />
             </div>
             <div>
-              <label className="block text-md font-medium mb-2 text-white">
+              <label className="block text-md font-medium mb-2 text-bluedark">
                 Business Response:
               </label>
               <textarea
@@ -90,7 +93,7 @@ const CommunicationQuality = () => {
               />
             </div>
             <div>
-              <label className="block text-md font-medium mb-2 text-white">
+              <label className="block text-md font-medium mb-2 text-bluedark">
                 Business Type:
               </label>
               <select
@@ -116,13 +119,26 @@ const CommunicationQuality = () => {
 
         {/* Right Side - Analysis Result */}
         {qualityResult && (
-          <div className="bg-white p-6 rounded-lg shadow-lg w-1/2 text-bluedark">
-            <h3 className="text-xl font-bold mb-4">Analysis Result</h3>
-            <p className="text-bluedark">
-              <strong>Response Evaluation:</strong> {qualityResult}
+  <div className="bg-white p-6 rounded-lg shadow-lg w-1/2 text-bluedark">
+    <h3 className="text-xl font-bold mb-4">Analysis Result</h3>
+    <div className="space-y-4 text-bluedark">
+      {qualityResult
+        .split(
+          /(?=Clarity:|Empathy:|Effectiveness:|Specific mistakes:|Actionable improvement suggestions:)/g
+        )
+        .map((section, index) => (
+          <div key={index}>
+            <h4 className="font-semibold mb-1">{section.split(":")[0]}:</h4>
+            <p className="ml-2 whitespace-pre-wrap">
+              {section.substring(section.indexOf(":") + 1).trim()}
             </p>
           </div>
-        )}
+        ))}
+    </div>
+  </div>
+)}
+
+
       </div>
     </div>
   );

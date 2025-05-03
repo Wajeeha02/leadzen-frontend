@@ -2,22 +2,24 @@
 
 import axios from "axios";
 import React, { useState } from "react";
+import { db } from "../firebase"; // Firestore config
+import { collection, addDoc } from "firebase/firestore";
 import bgImage from "../assets/images/image.png";
 
 const CustomerJourney = () => {
-  const [businessType, setBusinessType] = useState("e-commerce"); // Business type state
-  const [customerId, setCustomerId] = useState(""); // Customer ID state
+  const [businessType, setBusinessType] = useState("e-commerce");
+  const [customerId, setCustomerId] = useState("");
   const [customerMessage, setCustomerMessage] = useState("");
   const [businessResponse, setBusinessResponse] = useState("");
   const [conversations, setConversations] = useState<{ customer_message: string; business_response: string }[]>([]);
-  const [analysisResult, setAnalysisResult] = useState<any>(null); // Updated result type
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const handleAddConversation = () => {
     if (customerMessage && businessResponse) {
       setConversations([...conversations, { customer_message: customerMessage, business_response: businessResponse }]);
-      setCustomerMessage("");  // Clear message inputs after adding
-      setBusinessResponse(""); // Clear response input after adding
+      setCustomerMessage("");
+      setBusinessResponse("");
     }
   };
 
@@ -28,19 +30,27 @@ const CustomerJourney = () => {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:5000/analyze-journey", // Updated route
+        "http://127.0.0.1:5000/analyze-journey",
         {
-          business_type: businessType, // Send business type
-          customer_id: customerId, // Send customer ID
-          conversations: conversations, // Send all conversations
+          business_type: businessType,
+          customer_id: customerId,
+          conversations: conversations,
         },
         {
           headers: { "Content-Type": "application/json" },
         }
       );
 
-      setAnalysisResult(response.data); // Set the analysis result
-      setConversations([]);  // Clear conversations after submission (optional)
+      setAnalysisResult(response.data);
+      setConversations([]);
+
+      await addDoc(collection(db, "customerJourneys"), {
+        business_type: businessType,
+        customer_id: customerId,
+        conversations: conversations,
+        analysis_result: response.data,
+        timestamp: new Date(),
+      });
     } catch (error) {
       console.error("Error analyzing customer journey:", error);
     } finally {
@@ -107,7 +117,7 @@ const CustomerJourney = () => {
             {/* Add Conversation Button */}
             <button
               type="button"
-              onClick={handleAddConversation}  // Add conversation to list
+              onClick={handleAddConversation}
               className="w-full py-2 bg-lightblue text-bluedark rounded-lg hover:bg-white transition"
             >
               Add Conversation
@@ -137,15 +147,21 @@ const CustomerJourney = () => {
           </div>
         </div>
 
-        {/* Right Side - Result */}
-        {analysisResult && (
-          <div className="md:w-1/2 w-full bg-white p-6 rounded-lg shadow-md text-bluedark border border-gray-300">
-            <h3 className="text-xl font-bold mb-4">Analysis Result</h3>
-            <p><strong>Business Type:</strong> {analysisResult.business_type}</p> {/* Display Business Type */}
-            <p><strong>Total Interactions:</strong> {analysisResult.total_interactions}</p>
-            <p><strong>Journey Summary:</strong> {analysisResult.summary}</p>
-          </div>
-        )}
+       {/* Right Side - Result */}
+{analysisResult && (
+  <div className="md:w-1/2 w-full bg-white p-6 rounded-lg shadow-md text-bluedark border border-gray-300">
+    <h3 className="text-xl font-bold mb-4">Analysis Result</h3>
+    <p><strong>Business Type:</strong> {analysisResult.business_type || businessType}</p>
+    <p><strong>Total Interactions:</strong> {analysisResult.total_interactions || conversations.length}</p>
+    
+    <div className="mt-4">
+      <p><strong>Journey Summary:</strong></p>
+      <p>{analysisResult.summary}</p>
+
+    </div>
+  </div>
+)}
+
       </div>
     </div>
   );

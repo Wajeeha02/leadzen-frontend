@@ -1,17 +1,19 @@
 "use client";
 
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation";
 import { FC, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import bgImage from "../../assets/images/image.png";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../firebase"; // adjust path if needed
 
-const Login: FC = () => {
+const Signup: FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -21,25 +23,14 @@ const Login: FC = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/signin", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const token = await userCredential.user.getIdToken();
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage("User registered successfully!");
-        localStorage.setItem("token", data.token);
-        router.push("/home");
-      } else {
-        setMessage(data.message || "Invalid credentials");
-      }
-    } catch (error) {
-      setMessage("Error connecting to server");
+      setMessage("User registered successfully!");
+      localStorage.setItem("token", token);
+      router.push("/home");
+    } catch (error: any) {
+      setMessage(error.message || "Signup failed");
     }
   };
 
@@ -90,7 +81,7 @@ const Login: FC = () => {
               type="submit"
               className="w-full py-2 bg-bluedark text-white rounded-lg hover:bg-white hover:text-bluedark transition"
             >
-            Sign In
+              Sign Up
             </button>
           </form>
           <p className="text-center mt-4">
@@ -105,4 +96,4 @@ const Login: FC = () => {
   );
 };
 
-export default Login;
+export default Signup;

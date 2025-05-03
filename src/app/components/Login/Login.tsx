@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import bgImage from "../../assets/images/image.png";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../firebase"; // adjust path if different
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,25 +23,15 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const token = await userCredential.user.getIdToken();
 
-      const data = await response.json();
+      setMessage("Login successful! Redirecting...");
+      localStorage.setItem("token", token);
 
-      if (response.ok) {
-        setMessage("Login successful! Redirecting...");
-        localStorage.setItem("token", data.token);
-        router.push("/home");
-      } else {
-        setMessage(data.message || "Invalid credentials");
-      }
-    } catch (error) {
-      setMessage("Error connecting to server");
+      router.push("/home");
+    } catch (error: any) {
+      setMessage(error.message || "Login failed");
     }
   };
 
@@ -94,8 +86,8 @@ const Login = () => {
             </button>
           </form>
           <p className="text-center mt-4">
-            Don't have an account?
-            <a href="/signup" className="text-lightblue font-medium hover:underline">
+            Don&apos;t have an account?
+            <a href="/signin" className="text-lightblue font-medium hover:underline">
               Sign Up
             </a>
           </p>
