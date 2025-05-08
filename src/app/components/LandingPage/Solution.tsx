@@ -21,11 +21,7 @@ const Solutions: FC = () => {
       title: "Communication Quality",
       description: "Leverage AI to gauge customer emotions and attitudes across multiple channels for more personalized and responsive strategies.",
     },
-    {
-      svg: svg4.src,
-      title: "Lead Source Analysis",
-      description: "Track and evaluate the origin of your leads to refine targeting and improve lead generation efficiency.",
-    },
+   
   ];
 
   return (

@@ -72,7 +72,7 @@ const Signup: FC = () => {
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                className="absolute inset-y-0 right-4 flex items-center text-bluedark"
+                className="absolute right-4 top-2/3 transform -translate-y-1/2 flex items-center text-bluedark"
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
               </button>
