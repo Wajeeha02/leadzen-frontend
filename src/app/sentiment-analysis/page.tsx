@@ -18,7 +18,7 @@ const SentimentAnalysis = () => {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:5000/analyze-sentiment",
+        "https://leadzen-backend.onrender.com",
         {
           message: customerMessage,
           business_type: businessType,

@@ -30,7 +30,7 @@ const CustomerJourney = () => {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:5000/analyze-journey",
+        "https://leadzen-backend.onrender.com",
         {
           business_type: businessType,
           customer_id: customerId,

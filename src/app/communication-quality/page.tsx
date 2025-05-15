@@ -20,7 +20,7 @@ const CommunicationQuality = () => {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:5000/evaluate-communication",  // API endpoint
+        "https://leadzen-backend.onrender.com",  // API endpoint
         {
           business_type: businessType,  // Send business type
           customer_id: customerId,  // Send customer ID
